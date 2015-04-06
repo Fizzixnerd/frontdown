@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import shutil
+import subprocess
+
+import argparse
+import logging
+
+try:
+    import yaml
+    import trashcli
+except ImportError e:
+    logging.error("This program requires the 'python-yaml' and 'trash-cli' packages to be installed.  Please install them and run this program again.")
+    sys.exit(4)
+
+parser = argparse.ArgumentParser(
+    description="Restore a Linux system to a usable state for me.",
+    add_help=True)
+parser.add_argument(
+    "install", metavar="str", nargs="+", type=str,
+    help="Boring.")
+parser.add_argument(
+    "backup", metavar="str", nargs=0, type=str,
+    help="Initiate backup to frontdown directory.")
+
+class AptError(Exception):
+    pass
+
+class AppClassDoesNotExistError(Exception):
+    pass
+    
+# TODO: Put aptget_update/upgrade in some sort of top level Installer function
+class Installer:
+    def __init__(self):
+        parent = System.frontdown_dir
+        suffix = ".txt"
+        self.apps = dict(app_class: os.path.join(parent, app_class + suffix) for app_class in System.app_classes)
+        self.aptget_update()
+        self.aptget_upgrade()
+
+    def aptget(self, command, *args):
+        exit_code = subprocess.call(["sudo", "apt-get", command].extend(args))
+        if !exit_code:
+            return 0
+        else:
+            raise AptError("Apt exited with non-zero exit code %n" % exit_code)
+        
+    def aptget_update(self):
+        return self.aptget("update")
+
+    def aptget_upgrade(self):
+        return self.aptget("upgrade")
+
+    def aptget_install(self, package_list=[]):
+        return self.aptget("install", package_list)
+
+    def list_packages_from_file(self, filename):
+        package_list = []
+        with f as open(filename):
+            for line in f:
+                package_list.extend(line.split())
+        return package_list
+
+    def install(self, *args):
+        if args == ("all",):
+            args = self.apps
+        for app_class in args:
+            if app_class in args:
+                self.aptget_install(self.list_packages_from_file(
+                    self.apps[app_class]))
+            else:
+                raise AppClassDoesNotExistError(
+                    "%s is not a valid app class." % app_class)
+        
+class AppConfigFile:
+    def __init__(self, source, target, link=None):
+        # source is the backup location.
+        self.source = os.path.expanduser(source)
+        # target is the location the file must be in a standard install.
+        self.target = os.path.expanduser(target)
+        if link: self.link = os.path.expanduser(link)
+
+    def __str__(self):
+        return {"source": self.source, "target": self.target,
+                "link": self.link}.__str__()
+
+    def _copy(self, src, tgt):
+        logging.info("Moving {0} to {1]".format(tgt,
+                                                 System.frontdown_delete_dir))
+        shutil.move(tgt, System.frontdown_delete_dir)
+        logging.info("Copying {0} to {1}".format(src, tgt))
+        shutil.copytree(src, tgt)
+
+    def _link(self, tgt, lnk):
+        logging.info("Symlinking {0} to {1}".format(lnk, tgt))
+        os.symlink(tgt, lnk)
+
+    def restore(self):
+        self._copy(self.source, self.target)
+        if self.link: self._link(self.target, self.link)
+
+    def backup(self):
+        self._copy(self.target, self.source)
+
+class AppConfig:
+    def __init__(self, app_config_files=[]):
+        self.config_files = app_config_files
+
+    def __str__(self):
+        return self.config_files.__str__()
+
+    def pre_backup(self):
+        pass
+
+    def post_backup(self):
+        pass
+
+    def pre_restore(self):
+        pass
+
+    def post_restore(self):
+        pass
+
+    def backup(self):
+        self.pre_backup()
+        for config_file in self.config_files:
+            config_file.backup()
+        self.post_backup()
+    
+    def restore(self):
+        self.pre_restore()
+        for config_file in self.config_files:
+            config_file.restore()
+        self.post_restore()
+
+class AppConfigParser:
+    @staticmethod
+    def parse_file(control_filename):
+        with f as open(control_filename):
+            parsed_yaml = yaml.load(f)
+        filename_list = parsed_yaml["files"]
+        app_config_files = [
+            AppConfigFile(files["source"], files["target"], files.get("link"))
+            for files in filename_list]
+        app_config = AppConfig(app_config_files)
+        return app_config
+
+    @staticmethod
+    def parse_directory(directory_name):
+        return [AppConfigParser.parse_file(filename)
+                for filename in os.listdir(directory_name)
+                if filename.endswith(".yaml")]
+        
+if __name__ == "__main__":
+    installer = Installer()
+
+    sys.exit(0)
