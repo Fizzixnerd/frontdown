@@ -112,9 +112,9 @@ class AppConfigFile:
     def _copy(self, src, tgt):
         # FIXME OMG THIS IS SO DANGEROUS AND IT LIES!
         if os.path.exists(tgt):
-            logging.info("Moving old {0} to the Trash".format(tgt))
+            logging.info("Moving old {0} to the Trash.".format(tgt))
             trash.put(tgt)
-        logging.info("Copying {0} to {1}".format(src, tgt))
+        logging.info("Copying {0} to {1}.".format(src, tgt))
         if os.path.isdir(src):
             shutil.copytree(src, tgt)
         else:
@@ -122,7 +122,9 @@ class AppConfigFile:
 
     def _link(self, tgt, lnk):
         logging.info("Symlinking {0} to {1}".format(lnk, tgt))
-        os.unlink(lnk)
+        if os.path.exists(lnk):
+            logging.info("Moving old {0} to the Trash.".format(lnk))
+            trash.put(lnk)
         os.symlink(tgt, lnk)
 
     def restore(self):
