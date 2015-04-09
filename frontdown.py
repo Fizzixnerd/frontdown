@@ -14,6 +14,8 @@ import subprocess
 import argparse
 import logging
 
+from system import System
+
 try:
     import yaml
     from trashcli import cmds as trash
@@ -22,19 +24,6 @@ except ImportError as e:
     Installer().aptget_install(["python-yaml", "trash-cli"])
     import yaml
     from trashcli import cmds as trash
-
-
-class System:
-    """The frontdown_dir contains the different app classes as
-    directories.  Each directory contains
-
-    """
-    frontdown_dir = os.path.expanduser("~/.system/frontdown.d/")
-    app_classes = [app_class
-                   for app_class in os.listdir(frontdown_dir)
-                   if os.path.isdir(os.path.join(frontdown_dir, app_class))]
-    # Right now System.app_classses looks something like:
-    # ["core", "programming", "art", "gaming", "gui", "misc"]
 
 
 class AptError(Exception):
@@ -62,7 +51,7 @@ class Installer:
             return 0
         else:
             raise AptError("Apt exited with non-zero exit code {0}".format(exit_code))
-        
+
     def aptget_update(self):
         return self.aptget("update")
 

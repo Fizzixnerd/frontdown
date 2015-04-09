@@ -1,0 +1,4 @@
+files:
+  - source: tests/differentnamelinkconfig.txt
+    target: ~/src/frontdown/tests/txt/differentnamelinkconfig.txt
+    link: ~/src/frontdown/tests/link/differentnamelinkconfig.link

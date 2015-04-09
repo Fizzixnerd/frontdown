@@ -1,0 +1,4 @@
+files:
+  - source: test/oneconfig.txt
+    target: ~/src/frontdown/tests/txt/oneconfig.txt
+    link: ~/src/frontdown/tests/link/oneconfig.txt

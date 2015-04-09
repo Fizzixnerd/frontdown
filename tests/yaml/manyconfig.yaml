@@ -1,0 +1,11 @@
+files:
+  - source: test/manyconfig1.txt
+    target: ~/src/frontdown/tests/txt/manyconfig1.txt
+    link: ~/src/frontdown/tests/link/manyconfig1.txt
+
+  - source: test/manyconfig2.txt
+    target: ~/src/frontdown/tests/txt/manyconfig2.txt
+    link: ~/src/frontdown/tests/link/manyconfig2.txt
+
+  - source: test/manyconfig3.txt
+    target: ~/src/frontdown/tests/txt/manyconfig3.txt
