@@ -4,10 +4,10 @@
 # See LICENSE file for redistribution terms.
 
 """See LICENSE file for redistribution terms.
+
 """
 
 import os
-import sys
 import shutil
 import subprocess
 
@@ -21,7 +21,8 @@ except ImportError as e:
     logging.error("This program requires the 'python-yaml' and 'trash-cli' packages to be installed.  This program will now attempt to install them.  Or, press control+c and install it manually, then run this program again.")
     Installer().aptget_install(["python-yaml", "trash-cli"])
     import yaml
-    from trashcli import cmds
+    from trashcli import cmds as trash
+
 
 class System:
     """The frontdown_dir contains the different app classes as
@@ -35,12 +36,15 @@ class System:
     # Right now System.app_classses looks something like:
     # ["core", "programming", "art", "gaming", "gui", "misc"]
 
+
 class AptError(Exception):
     pass
 
+
 class AppClassDoesNotExistError(Exception):
     pass
-    
+
+
 class Installer:
     def __init__(self):
         suffix = ".apps"
@@ -57,7 +61,7 @@ class Installer:
         if not exit_code:
             return 0
         else:
-            raise AptError("Apt exited with non-zero exit code %n" % exit_code)
+            raise AptError("Apt exited with non-zero exit code {0}".format(exit_code))
         
     def aptget_update(self):
         return self.aptget("update")
@@ -85,7 +89,8 @@ class Installer:
             else:
                 raise AppClassDoesNotExistError(
                     "%s is not a valid app class." % app_class)
-        
+
+
 class AppConfigFile:
     def __init__(self, source, target, link=None):
         # source is the backup location.
@@ -98,18 +103,19 @@ class AppConfigFile:
             self.link = None
 
     def __str__(self):
-        return {"source": self.source, "target": self.target,
-                "link": self.link}.__str__()
+        return str({"source": self.source, "target": self.target,
+                    "link": self.link}.__str__())
 
     def __repr__(self):
         return self.__str__()
 
     def _copy(self, src, tgt):
-        ## FIXME OMG THIS IS SO DANGEROUS AND IT LIES!
-        logging.info("Moving old {0} to the Trash".format(tgt))
+        # FIXME OMG THIS IS SO DANGEROUS AND IT LIES!
+        if os.path.exists(tgt):
+            logging.info("Moving old {0} to the Trash".format(tgt))
+            trash.put(tgt)
         logging.info("Copying {0} to {1}".format(src, tgt))
         if os.path.isdir(src):
-            if os.path.exists(tgt): shutil.rmtree(tgt)
             shutil.copytree(src, tgt)
         else:
             shutil.copy(src, tgt)
@@ -121,10 +127,12 @@ class AppConfigFile:
 
     def restore(self):
         self._copy(self.source, self.target)
-        if self.link: self._link(self.target, self.link)
+        if self.link:
+            self._link(self.target, self.link)
 
     def backup(self):
         self._copy(self.target, self.source)
+
 
 class AppConfig:
     def __init__(self, app_config_files=[]):
@@ -153,12 +161,13 @@ class AppConfig:
         for config_file in self.config_files:
             config_file.backup()
         self.post_backup()
-    
+
     def restore(self):
         self.pre_restore()
         for config_file in self.config_files:
             config_file.restore()
         self.post_restore()
+
 
 class AppConfigParser:
     @staticmethod
@@ -189,13 +198,14 @@ class AppConfigParser:
             for filename in os.listdir(directory_name)
             if os.path.isdir(os.path.join(directory_name, filename))]
 
+
 def main():
     parser = argparse.ArgumentParser(description="Restore a Linux system to a previous state in terms of applications installed and configuration files.",
                                      add_help=True)
     main_command = parser.add_mutually_exclusive_group()
     main_command.add_argument("--install", nargs="+", type=str,
                               choices=System.app_classes,
-                              help="Install an class of apps, and restore their configuration files.")
+                              help="Install a class of apps, and restore their configuration files.")
     main_command.add_argument("--backup", nargs="+", type=str,
                               choices=System.app_classes,
                               help="Initiate backup to the frontdown directory.")
@@ -212,7 +222,7 @@ def main():
     if args.install:
         installer = Installer()
         installer.install(args.install)
-        
+
     for config_class in app_configs:
         for _ in config_class:
             for app_config in _:
