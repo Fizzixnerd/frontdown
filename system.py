@@ -11,5 +11,6 @@ class System:
     app_classes = [app_class
                    for app_class in os.listdir(frontdown_dir)
                    if os.path.isdir(os.path.join(frontdown_dir, app_class))]
+    app_classes.append("all")
     # Right now System.app_classses looks something like:
     # ["core", "programming", "art", "gaming", "gui", "misc"]

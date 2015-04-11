@@ -10,8 +10,9 @@
 import argparse
 
 from system import System
+from platform import Platform
+from appsinstaller import AppsInstaller
 from appconfigparser import AppConfigParser
-from installer import Installer
 
 
 def main():
@@ -28,23 +29,32 @@ def main():
                               choices=System.app_classes,
                               help="Initiate a restore from the frontdown directory.")
     args = parser.parse_args()
+
     app_classes = args.install or args.backup or args.restore
+
     if not app_classes:
         parser.print_help()
         exit(0)
-    app_configs = [AppConfigParser.parse_class_directory(app_class)
-                   for app_class in app_classes]
+
+    if "all" in app_classes:
+        app_classes = filter(lambda x: x != "all", System.app_classes)
+
+    app_configs = map(AppConfigParser.parse_class_directory,
+                      app_classes)
+
     if args.install:
-        installer = Installer()
-        installer.install(args.install)
+        apps_installer = AppsInstaller(Platform().installer)
+        map(apps_installer.install_class, app_classes)
+        exit(0)
 
     for config_class in app_configs:
-        for _ in config_class:
-            for app_config in _:
-                if args.restore or args.install:
+        for configs in config_class:
+            for app_config in configs:
+                if args.restore:
                     app_config.restore()
                 elif args.backup:
                     app_config.backup()
+    exit(0)
 
 if __name__ == "__main__":
     main()
