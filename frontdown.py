@@ -9,6 +9,7 @@
 
 import argparse
 
+import importhelper  # checks for yaml and trashcli.
 from system import System
 from platform import Platform
 from appsinstaller import AppsInstaller
