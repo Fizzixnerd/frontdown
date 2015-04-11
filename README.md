@@ -13,7 +13,7 @@ For example, one could create a class "programming" which contained
 the apps "emacs" and "ipython", which backed-up and restored those
 programs along with their configuration files.
 
-One would create a folder in ~/.system/frontdown.d/ called
+One would create a folder in ~/.frontdown/ called
 "programming".  Within this folder, create a file called
 "programming.apps" and place within it a space- and/or
 newline-separated list of programs which will be fed to apt-get to
