@@ -9,6 +9,14 @@ class AptError(InstallError):
     pass
 
 
+class YumError(InstallError):
+    pass
+
+
+class UnsupportedInstallerError(InstallError):
+    pass
+
+
 class Installer:
     """Abstract Base Class for an installer.  Represents the installation
     system for the current platform (ie apt, yum, pacman, emerge,
@@ -45,3 +53,24 @@ class AptInstaller(Installer):
 
     def install(self, apps=[]):
         return self._aptget("install", apps)
+
+
+class UnsupportedInstaller(Installer):
+
+    def install(self, apps=[]):
+        raise UnsupportedInstallerError("This installer isn't supported yet.")
+
+    def update(self):
+        raise UnsupportedInstallerError("This installer isn't supported yet.")
+
+
+class YumInstaller(UnsupportedInstaller):
+    pass
+
+
+class ArchInstaller(UnsupportedInstaller):
+    pass
+
+
+class GentooInstaller(UnsupportedInstaller):
+    pass
